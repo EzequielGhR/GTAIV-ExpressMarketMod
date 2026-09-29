@@ -1,9 +1,10 @@
 import { RequestError } from './AppError';
 import type { Product } from '../models/Product';
 
+
 export class InvalidProductError extends RequestError {
-  constructor(id: number) {
-    super(404, `product '${id}' does not exist`);
+  constructor(id: number, type: string) {
+    super(404, `product of type '${type}' and id '${id}' does not exist`);
   }
 }
 

@@ -1,62 +1,47 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { Product } from '../models/Product'
 import { InvalidProductError, OutOfStockError, NotEnoughMoneyError } from '../errors/ProductErrors';
 import { IncompletePayloadError } from '../errors/AppError';
-
-//TODO: Temp data - DB is comming
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Basseball Bat",
-    price: 10,
-    description: "Melee Weapon, baseball bat",
-    stock: 5
-  },
-  {
-    id: 2,
-    name: "Pool Cue",
-    price: 10,
-    description: "Melee Weapon, pool cue",
-    stock: 5
-  },
-  {
-    id: 3,
-    name: "Knife",
-    price: 10,
-    description: "Melee Weapon, baseball bat",
-    stock: 5
-  },
-]
+import { DBManager } from '../db/manager';
 
 
-export const getProducts = (_req: Request, res: Response) => {
-  res.json(products);
+export const getProducts = async (_req: Request, res: Response) => {
+  const dbManager = await DBManager.getInstance();
+  res.json(await dbManager.getAllProducts());
 }
 
 
-export const purchaseProduct = (req: Request, res: Response, next: NextFunction) => {
-  const { productId, playerMoney } = req.body;
-  if (!productId || !playerMoney) {
+export const getWeapons = async (_req: Request, res: Response) => {
+  const dbManager = await DBManager.getInstance();
+  res.json(await dbManager.getAllWeapons());
+}
+
+export const purchaseWeapon = async (req: Request, res: Response, next: NextFunction) => {
+  const { playerMoney } = req.body;
+  const weaponId = parseInt(req.params.weaponId as string);
+  
+  if (!weaponId || Number.isNaN(weaponId) || !playerMoney) {
     return next(
       new IncompletePayloadError({
-       "productId": productId ?? null,
+       "productId": weaponId ?? null,
        "playerMoney": playerMoney ?? null 
       })
     );
   }
   
-  const product = products.find(p => p.id === parseInt(productId));
+  const dbManager = await DBManager.getInstance();
+  const product = await dbManager.getWeaponById(weaponId);
 
-  if (!product) return next(new InvalidProductError(productId));
+  if (!product) return next(new InvalidProductError(weaponId, 'weapon'));
 
   if (product.stock <= 0) return next(new OutOfStockError(product));
 
   if (parseInt(playerMoney) < product.price) return next(new NotEnoughMoneyError(playerMoney, product));
 
   product.stock--;
+  dbManager.updateWeapon(product);
+  
   return res.json({
     message: `You bought ${product.name}`,
     product
-  })
-    
+  })  
 }

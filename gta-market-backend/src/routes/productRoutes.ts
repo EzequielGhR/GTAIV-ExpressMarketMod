@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { getProducts, purchaseProduct } from '../controllers/productController';
+import { getProducts, getWeapons,  purchaseWeapon } from '../controllers/productController';
 
 
 export const router = Router();
 
 router.get('/', getProducts);
-router.post('/purchase', purchaseProduct);
+router.get('/weapons', getWeapons);
+router.post('/weapons/:weaponId', purchaseWeapon);
