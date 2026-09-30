@@ -3,10 +3,14 @@ import type { PathLike } from 'fs';
 import Path from 'path';
 import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
+import { randomUUID } from 'crypto';
 import { TableNames } from './enums';
-import { SourceItem, SourceData } from './types';
+import { type AdminItem, type SourceItem, SourceData, TokenData } from './types';
 import { Product } from '../models/Product';
 
+
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 
 const DATA_PATH = Path.join(__dirname, "..", "..", "sources");
 const WEAPONS_CSV_PATH = Path.join(DATA_PATH, "weapons.csv");
@@ -21,6 +25,19 @@ const PRODUCTS_CREATE_SQL = `
     price FLOAT NOT NULL
   )
 `
+const ADMIN_CREATE_SQL = `
+  CREATE TABLE IF NOT EXISTS ${TableNames.ADMIN} (
+    username VARCHAR(31) NOT NULL,
+    password VARCHAR(31) NOT NULL,
+    token VARCHAR(255),
+    token_age DATETIME
+  )
+`
+
+const ADMIN_INIT_DATA = `
+  INSERT INTO ${TableNames.ADMIN}
+  VALUES ('${ADMIN_USER}', '${ADMIN_PASSWORD}', NULL, NULL)
+`;
 
 export class DBManager {
   private database: Database;
@@ -84,6 +101,49 @@ export class DBManager {
     `);
   }
 
+  public async getAdminToken(user: string, password: string): Promise<TokenData> {
+    const result = await this.database.get(`
+      SELECT token, token_age FROM ${TableNames.ADMIN}
+      WHERE username = ?
+      AND password = ?
+    `, user, password);
+
+    return result;
+  }
+
+
+  public async validateAdminToken(token: string): Promise<TokenData> {
+    const result = await this.database.get(`
+      SELECT token, token_age FROM ${TableNames.ADMIN}
+      WHERE token = ?
+    `, token);
+  
+    return result;
+  }
+
+  public async updateAdminToken(user: string, password: string): Promise<string | null> {
+    const result = await this.database.get(`
+      SELECT * FROM ${TableNames.ADMIN}
+      WHERE username = ?
+      AND password = ?
+    `, user, password);
+
+    if (!result) return null;
+
+    const token = randomUUID();
+    const tokenAge = new Date()
+
+    await this.database.exec(`
+      UPDATE ${TableNames.ADMIN}
+      SET token = '${token}',
+        token_age = '${tokenAge.toISOString()}'
+      WHERE username = '${user}'
+      AND password = '${password}'
+    `);
+
+    return token;
+  }
+
   private static async openDb(): Promise<Database> {
     const database = await open({
       filename: Path.join(__dirname, "database.db"),
@@ -97,6 +157,8 @@ export class DBManager {
     try {
       console.log("Creating DB Tables");
       await database.exec(PRODUCTS_CREATE_SQL);
+      await database.exec(ADMIN_CREATE_SQL);
+      await database.exec(ADMIN_INIT_DATA);
       await DBManager.insertData(database);
     } catch(e) {
       console.error((e as Error).message);

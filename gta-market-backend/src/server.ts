@@ -1,6 +1,7 @@
 import express, { type Application, type Request, type Response } from 'express';
 import cors from 'cors';
 import { router as productRoutes } from './routes/productRoutes';
+import { router as adminRoutes } from './routes/adminRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { DBManager } from './db/manager';
 
@@ -14,11 +15,13 @@ app.use(express.json());
 
 // Routes
 app.use('/api/products', productRoutes);
+app.use('/api/admin', adminRoutes);
 app.get('/api', (_req: Request, res: Response) => {
   res.status(200).json({ 
     message: "Healthy",
   })
 })
+
 
 // Errors
 app.use(errorHandler);

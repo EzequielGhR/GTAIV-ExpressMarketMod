@@ -8,3 +8,13 @@ export interface SourceData {
   weapons: SourceItem[]
   // TODO: We might add more product types
 };
+
+export interface TokenData {
+  token: string,
+  token_age: string
+}
+
+export type AdminItem = TokenData & {
+  username: string,
+  password: string
+}
