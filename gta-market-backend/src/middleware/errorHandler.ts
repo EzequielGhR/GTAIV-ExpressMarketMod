@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { RequestError } from '../errors/AppError';
+import { getLogger } from '../logger/logger';
 
+const logger = getLogger("middleware:error");
 
 export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof RequestError) {
@@ -21,7 +23,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   // TODO: If this was deployed in different environments
   // it would make sense to not always log the error to the console
   // so internals are not leaked.
-  console.error(err);
+  logger.error(err);
   return res.status(500).json({
     error: true,
     message: "Internal Server Error"

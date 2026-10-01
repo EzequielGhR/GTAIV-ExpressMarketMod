@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { TableNames } from './enums';
 import { type SourceItem, SourceData, TokenData } from './types';
 import { Product } from '../models/Product';
+import { getLogger } from '../logger/logger';
 
 
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
@@ -40,6 +41,8 @@ const ADMIN_INIT_DATA = `
   VALUES ('${ADMIN_USER}', '${ADMIN_PASSWORD}', NULL, NULL)
 `;
 
+const logger = getLogger("db:manager");
+
 export class DBManager {
   private database: Database;
   private static instance: DBManager | null = null;
@@ -50,7 +53,7 @@ export class DBManager {
 
   public static async getInstance(): Promise<DBManager> {
     if (!DBManager.instance) {
-      console.log("Allocating new DB manager instance");
+      logger.info("Allocating new DB manager instance");
       const database = await DBManager.openDb();
       await DBManager.createTables(database);
       DBManager.instance = new DBManager(database);
@@ -60,7 +63,7 @@ export class DBManager {
   }
 
   public async close(): Promise<void> {
-    console.log("Closing Database");
+    logger.info("Closing Database");
     await this.closeDb();
   }
 
@@ -190,13 +193,13 @@ export class DBManager {
 
   private static async createTables(database: Database): Promise<void> {
     try {
-      console.log("Creating DB Tables");
+      logger.info("Creating DB Tables");
       await database.exec(PRODUCTS_CREATE_SQL);
       await database.exec(ADMIN_CREATE_SQL);
       await database.exec(ADMIN_INIT_DATA);
       await DBManager.insertData(database);
     } catch(e) {
-      console.error((e as Error).message);
+      logger.error((e as Error).message);
     }
   }
 
@@ -231,7 +234,7 @@ export class DBManager {
     )`);
 
     if (weaponValues.length > 0) {
-      console.log(`Inserting ${weaponValues.length} weapons into DB`);
+      logger.info(`Inserting ${weaponValues.length} weapons into DB`);
       const insertQuery = `
         INSERT INTO ${TableNames.PRODUCTS}
         VALUES
@@ -242,7 +245,7 @@ export class DBManager {
     }
 
     if (ammoValues.length > 0) {
-      console.log(`Inserting ${ammoValues.length} ammo items into DB`);
+      logger.info(`Inserting ${ammoValues.length} ammo items into DB`);
       const insertQuery = `
         INSERT INTO ${TableNames.PRODUCTS}
         VALUES
@@ -272,7 +275,7 @@ export class DBManager {
 
 
 async function parseData(): Promise<SourceData> {
-  console.log("Parsing source data");
+  logger.info("Parsing source data");
   const weapons = await parseCsv(WEAPONS_CSV_PATH, parseWeapon);
   const ammo = await parseCsv(AMMO_CSV_PATH, parseAmmo);  
   return {
@@ -323,13 +326,13 @@ async function parseCsv(
 ): Promise<SourceItem[]> {
   const rows: SourceItem[] = [];
   try {
-    console.log("Parsing csv:", path);
+    logger.info("Parsing csv:", path);
     const data = await fs.readFile(path, "utf8");
     data.split("\n").slice(1).forEach((value: string) => {
       parseValue(value, rows);
     });
   } catch (e) {
-    console.error(e);
+    logger.error(e as Error);
     throw e;
   }
 

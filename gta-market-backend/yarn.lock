@@ -1265,6 +1265,11 @@ tsconfig@^7.0.0:
     strip-bom "^3.0.0"
     strip-json-comments "^2.0.0"
 
+tslog@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/tslog/-/tslog-5.2.0.tgz#b47177058696e19855f4d5b8d03ee9f5ff2af5e3"
+  integrity sha512-bD0FpBIFZ1OInp7uzQmEn1SJe6feTkVTCudw/27ILuISbVZtTryXqauxyCWTa1I8ZgTm9OGQ6YrJPKM+6QTeJA==
+
 tunnel-agent@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/tunnel-agent/-/tunnel-agent-0.6.0.tgz#27a5dea06b36b04a0a9966774b290868f0fc40fd"
