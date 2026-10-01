@@ -2,12 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 import { RequestError } from '../errors/AppError';
 
 
-export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof RequestError) {
     return res.status(err.status).json({
       error: true,
       message: err.message
     });
+  }
+
+  const relevantMethods = ['POST', 'PUT'];
+  if (relevantMethods.includes(req.method) && err instanceof SyntaxError) {
+    return res.status(400).json({
+      error: true,
+      message: err.message
+    })
   }
 
   // TODO: If this was deployed in different environments
