@@ -1,0 +1,19 @@
+id,name,description,stock,price
+1,BASEBALLBAT,It's a baseballbat,10,20
+2,POOLCUE,It's a poolcue,10,30
+3,KNIFE,It's a knife,10,50
+4,GRENADE,It's a grenade,10,25
+5,MOLOTOV,It's a molotov,10,30
+7,PISTOL,It's a pistol,10,200
+9,DEAGLE,It's a deagle,10,400
+10,SHOTGUN,It's a shotgun,10,600
+11,BARETTA,It's a baretta,10,900
+12,MICRO_UZI,It's a micro_uzi,10,550
+13,MP5,It's a mp5,10,750
+14,AK47,It's a ak47,10,1050
+15,M4,It's a m4,10,2500
+16,SNIPERRIFLE,It's a sniperrifle,10,3000
+17,M40A1,It's a m40a1,10,5400
+18,RLAUNCHER,It's a rlauncher,10,8000
+19,FTHROWER,It's a fthrower,10,7000
+48,ARMOUR,It's a armour,10,1000
