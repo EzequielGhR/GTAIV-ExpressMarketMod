@@ -17,6 +17,12 @@ export const getWeapons = async (_req: Request, res: Response) => {
 }
 
 
+export const getAmmo = async (_req: Request, res: Response) => {
+  const dbManager = await DBManager.getInstance();
+  res.json(await dbManager.getAllAmmo());
+}
+
+
 export const purchaseWeapon = async (req: Request, res: Response, next: NextFunction) => {
   const { playerMoney } = req.body;
   const weaponId = parseInt(req.params.weaponId as string);
@@ -61,6 +67,63 @@ export const updateWeapon = async (req: Request, res: Response, next: NextFuncti
   const dbManager = await DBManager.getInstance();
   const product = await dbManager.getWeaponById(weaponId);
   if (!product) return next(new InvalidProductError(weaponId, 'weapon'));
+
+  product.name = partialProduct.name || product.name;
+  product.description = partialProduct.description || product.description;
+  product.price = partialProduct.price || product.price;
+  product.stock = partialProduct.stock || product.stock;
+
+  await dbManager.updateWeapon(product);
+  return res.status(200).json({
+    product
+  });
+}
+
+
+export const purchaseAmmo = async (req: Request, res: Response, next: NextFunction) => {
+  const { playerMoney } = req.body;
+  const ammoId = parseInt(req.params.ammoId as string);
+  
+  if (!ammoId || Number.isNaN(ammoId) || !playerMoney) {
+    return next(
+      new IncompletePayloadError({
+       "productId": ammoId ?? null,
+       "playerMoney": playerMoney ?? null 
+      })
+    );
+  }
+  
+  const dbManager = await DBManager.getInstance();
+  const product = await dbManager.getAmmoById(ammoId);
+
+  if (!product) return next(new InvalidProductError(ammoId, 'ammo'));
+
+  if (product.stock <= 0) return next(new OutOfStockError(product));
+
+  if (parseInt(playerMoney) < product.price) return next(new NotEnoughMoneyError(playerMoney, product));
+
+  product.stock--;
+  dbManager.updateAmmo(product);
+  
+  return res.json({
+    message: `You bought ${product.name}`,
+    product
+  })
+}
+
+
+export const updateAmmo = async (req: Request, res: Response, next: NextFunction) => {
+  const ammoId = parseInt(req.params.amoId as string);
+  const partialProduct: Partial<Product> = req.body;
+
+  if (!ammoId || Number.isNaN(ammoId) || !partialProduct) return next(new IncompletePayloadError({
+     ammoId,
+     "product": partialProduct ?? null
+   }));
+
+  const dbManager = await DBManager.getInstance();
+  const product = await dbManager.getAmmoById(ammoId);
+  if (!product) return next(new InvalidProductError(ammoId, 'ammo'));
 
   product.name = partialProduct.name || product.name;
   product.description = partialProduct.description || product.description;

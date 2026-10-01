@@ -5,7 +5,7 @@ import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
 import { randomUUID } from 'crypto';
 import { TableNames } from './enums';
-import {  type SourceItem, SourceData, TokenData } from './types';
+import { type SourceItem, SourceData, TokenData } from './types';
 import { Product } from '../models/Product';
 
 
@@ -78,6 +78,15 @@ export class DBManager {
     return result.map(r => this.formatProduct(r));
   }
 
+  public async getAllAmmo(): Promise<Product[]> {
+    const result = await this.database.all(`
+      SELECT * FROM ${TableNames.PRODUCTS}
+      WHERE type='ammo'
+    `);
+
+    return result.map(r => this.formatProduct(r));
+  }
+
   public async getWeaponById(weaponId: number): Promise<Product | null> {
     const result = await this.database.get(`
       SELECT * FROM ${TableNames.PRODUCTS}
@@ -91,6 +100,18 @@ export class DBManager {
     return this.formatProduct(result);
   }
 
+  public async getAmmoById(ammoId: number): Promise<Product | null> {
+    const result = await this.database.get(`
+      SELECT * FROM ${TableNames.PRODUCTS}
+      WHERE type = 'ammo'
+      AND id = ?
+    `, ammoId);
+
+    if (!result) return null;
+
+    return this.formatProduct(result);
+  }
+
   public async updateWeapon(weapon: Product) {
     await this.database.exec(`
       UPDATE ${TableNames.PRODUCTS}
@@ -99,6 +120,19 @@ export class DBManager {
         stock = ${weapon.stock},
         price = ${weapon.price}
       WHERE id = ${weapon.id}
+        AND type = 'weapon'
+    `);
+  }
+
+  public async updateAmmo(ammo: Product) {
+    await this.database.exec(`
+      UPDATE ${TableNames.PRODUCTS}
+      SET name = '${ammo.name}',
+        description = '${ammo.description}',
+        stock = ${ammo.stock},
+        price = ${ammo.price}
+      WHERE id = ${ammo.id}
+        AND type = 'ammo'
     `);
   }
 
