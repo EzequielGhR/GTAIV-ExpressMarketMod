@@ -5,7 +5,7 @@ import sqlite3 from 'sqlite3';
 import { open, type Database } from 'sqlite';
 import { randomUUID } from 'crypto';
 import { TableNames } from './enums';
-import { type AdminItem, type SourceItem, SourceData, TokenData } from './types';
+import {  type SourceItem, SourceData, TokenData } from './types';
 import { Product } from '../models/Product';
 
 
@@ -14,6 +14,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 
 const DATA_PATH = Path.join(__dirname, "..", "..", "sources");
 const WEAPONS_CSV_PATH = Path.join(DATA_PATH, "weapons.csv");
+const AMMO_CSV_PATH = Path.join(DATA_PATH, "ammo.csv");
 
 const PRODUCTS_CREATE_SQL = `
   CREATE TABLE IF NOT EXISTS ${TableNames.PRODUCTS} (
@@ -166,12 +167,16 @@ export class DBManager {
   }
 
   private static async insertData(database: Database): Promise<void> {
-    const { weapons } = await parseData();
+    const { weapons, ammo } = await parseData();
     const existingProducts = await database.all(`SELECT * FROM ${TableNames.PRODUCTS}`);
     const existingWeapons = existingProducts.filter(p => p.type === 'weapon');
+    const existingAmmo = existingProducts.filter(p => p.type === 'ammo');
     
     const newWeapons = weapons.filter(
       weapon => !existingWeapons.some(w => w.id === weapon.id)
+    );
+    const newAmmo = ammo.filter(
+      ammoItem => !existingAmmo.some(a => a.id === ammoItem.id)
     );
 
     const weaponValues = newWeapons.map(w => `(
@@ -182,6 +187,14 @@ export class DBManager {
       '${w.stock}',
       '${w.price}'
     )`);
+    const ammoValues = newAmmo.map(a => `(
+      '${a.id}',
+      '${a.name.replace("'", "")}',
+      'ammo',
+      '${a.description.replace("'", "")}',
+      '${a.stock}',
+      '${a.price}'
+    )`);
 
     if (weaponValues.length > 0) {
       console.log(`Inserting ${weaponValues.length} weapons into DB`);
@@ -191,6 +204,17 @@ export class DBManager {
         ${weaponValues.join(',\n')}
       `;
       
+      await database.exec(insertQuery);
+    }
+
+    if (ammoValues.length > 0) {
+      console.log(`Inserting ${ammoValues.length} ammo items into DB`);
+      const insertQuery = `
+        INSERT INTO ${TableNames.PRODUCTS}
+        VALUES
+        ${ammoValues.join(',\n')}
+      `;
+
       await database.exec(insertQuery);
     }
   }
@@ -216,13 +240,26 @@ export class DBManager {
 async function parseData(): Promise<SourceData> {
   console.log("Parsing source data");
   const weapons = await parseCsv(WEAPONS_CSV_PATH, parseWeapon);
+  const ammo = await parseCsv(AMMO_CSV_PATH, parseAmmo);  
   return {
-    weapons: weapons as SourceItem[]
+    weapons: weapons as SourceItem[],
+    ammo
   };
 }
 
 
 function parseWeapon(line: string, weapons: SourceItem[]): void {
+  parseProduct(line, "weapon", weapons);
+}
+
+
+
+function parseAmmo(line: string, ammo: SourceItem[]): void {
+  parseProduct(line, "ammo", ammo);
+}
+
+
+function parseProduct(line: string, type: string, products: SourceItem[]): void {
   const [
     id,
     name,
@@ -236,13 +273,13 @@ function parseWeapon(line: string, weapons: SourceItem[]): void {
   const sourceItem: SourceItem = {
     id: parseInt(id),
     name,
-    type: 'weapon',
+    type,
     description,
     stock: parseInt(stock),
     price: parseInt(price)
   };
 
-  weapons.push(sourceItem);
+  products.push(sourceItem);
 }
 
 

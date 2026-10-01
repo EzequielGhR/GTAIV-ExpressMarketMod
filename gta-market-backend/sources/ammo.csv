@@ -1,0 +1,15 @@
+id,name,description,stock,price
+4,Grenade Ammo,It's a grenade,100,5
+5,Molotov Ammo,It's a molotov,100,6
+7,Pistol Ammo,It's a pistol bullet,100,40
+9,Deagle Ammo,It's a deagle bullet,100,80
+10,Shotgun Ammo,It's a shotgun bullet,100,120
+11,Baretta Ammo,It's a baretta bullet,100,180
+12,Micro_uzi Ammo,It's a micro_uzi bullet,100,110
+13,Mp5 Ammo,It's a mp5 bullet,100,150
+14,Ak47 Ammo,It's a ak47 bullet,100,210
+15,M4 Ammo,It's a m4 bullet,100,500
+16,Sniperrifle Ammo,It's a sniperrifle bullet,100,600
+17,M40a1 Ammo,It's a m40a1 bullet,100,1080
+18,Rlauncher Ammo,It's a rocket,100,1600
+19,Fthrower Ammo,It's a fthrower charge,100,1400

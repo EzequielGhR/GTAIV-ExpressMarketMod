@@ -5,7 +5,8 @@ export type SourceItem = Product & {
 }
 
 export interface SourceData {
-  weapons: SourceItem[]
+  weapons: SourceItem[],
+  ammo: SourceItem[]
   // TODO: We might add more product types
 };
 
